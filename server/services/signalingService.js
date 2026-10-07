@@ -3,11 +3,12 @@
 const config = require('../config');
 
 /**
- * Rate limiter for WebSocket messages. Sliding window per socket.
+ * Rate limiter + message validator for the WebSocket signaling layer.
  */
 class SignalingService {
   constructor() {
-    this.buckets = new Map(); // socketId -> { count, resetAt }
+    /** @type {Map<string, { count: number, resetAt: number }>} */
+    this.buckets = new Map();
   }
 
   /** Returns true if the message is allowed, false if it should be dropped. */
@@ -26,7 +27,10 @@ class SignalingService {
     this.buckets.delete(socketId);
   }
 
-  /** Validate the shape of an inbound signaling message. */
+  /**
+   * Validate the shape of an inbound signaling message.
+   * Returns null if valid, or a short string identifying the problem.
+   */
   validate(msg) {
     if (!msg || typeof msg !== 'object') return 'malformed';
     if (typeof msg.type !== 'string') return 'missing-type';
@@ -41,11 +45,16 @@ class SignalingService {
     ]);
     if (!allowed.has(msg.type)) return 'unknown-type';
 
-    if (msg.type === 'create-session' || msg.type === 'join-session') {
+    if (msg.type === 'create-session') {
+      // The server generates the code; the client must not supply one.
+      if (msg.role !== 'controller') return 'invalid-role';
+    }
+
+    if (msg.type === 'join-session') {
       if (typeof msg.code !== 'string' || !config.SESSION_CODE_REGEX.test(msg.code)) {
         return 'invalid-code';
       }
-      if (msg.role !== 'controller' && msg.role !== 'viewer') return 'invalid-role';
+      if (msg.role !== 'viewer') return 'invalid-role';
     }
 
     if (msg.type === 'signal') {
