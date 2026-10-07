@@ -35,6 +35,10 @@
         $('cameraVideo').srcObject = stream;
         await $('cameraVideo').play();
         State.cameraReady = true;
+
+        // Keep the screen on while the camera is live.
+        DRAW.WakeLock?.acquire();
+
         stream.getVideoTracks()[0].addEventListener('ended', () => {
           State.cameraReady = false;
           if (State.live) DRAW.Streaming.stop();
@@ -63,6 +67,8 @@
       State.camera = null;
       State.cameraReady = false;
       $('cameraVideo').srcObject = null;
+      // Release the wake lock when nothing needs the screen on.
+      if (!State.live) DRAW.WakeLock?.release();
     },
 
     async apply() {
