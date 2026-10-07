@@ -5,40 +5,38 @@
   /* ------------------------------------------------------------------ */
   const DRAW = window.DRAW;
   if (!DRAW) {
-    console.error('[DRAW] namespace missing — state.js did not load. ' +
-      'Check that /js/state.js is reachable and loads before app.js.');
+    console.error('[DRAW] namespace missing — state.js did not load.');
     return;
   }
 
-  const { $, State, UI } = DRAW;
-  const { Camera, Artwork, AR, Calibration, Pairing, Streaming } = DRAW;
+  const { $, State, UI, Persist } = DRAW;
+  const { Camera, Artwork, AR, Calibration, Pairing, Streaming, WakeLock } = DRAW;
 
-  if (!$ || !State || !UI) {
-    console.error('[DRAW] core modules missing on DRAW:', {
-      $: !!$,
-      State: !!State,
-      UI: !!UI,
+  if (!$ || !State || !UI || !Persist) {
+    console.error('[DRAW] core modules missing:', {
+      $: !!$, State: !!State, UI: !!UI, Persist: !!Persist,
     });
     return;
   }
 
   if (!Camera || !Artwork || !AR || !Calibration || !Pairing || !Streaming) {
-    console.error('[DRAW] one or more feature modules failed to load:', {
-      Camera: !!Camera,
-      Artwork: !!Artwork,
-      AR: !!AR,
-      Calibration: !!Calibration,
-      Pairing: !!Pairing,
-      Streaming: !!Streaming,
+    console.error('[DRAW] feature modules missing:', {
+      Camera: !!Camera, Artwork: !!Artwork, AR: !!AR,
+      Calibration: !!Calibration, Pairing: !!Pairing, Streaming: !!Streaming,
     });
     return;
   }
 
   /* ------------------------------------------------------------------ */
+  /* Restore persisted state BEFORE building the UI                      */
+  /* ------------------------------------------------------------------ */
+  const hadPersistedState = Persist.load();
+
+  /* ------------------------------------------------------------------ */
   /* Mode tabs                                                           */
   /* ------------------------------------------------------------------ */
-  $('controllerTab').onclick = () => UI.role('controller');
-  $('viewerTab').onclick = () => UI.role('viewer');
+  $('controllerTab').onclick = () => { UI.role('controller'); Persist.save(); };
+  $('viewerTab').onclick = () => { UI.role('viewer'); Persist.save(); };
   $('helpButton').onclick = () => $('helpDialog').showModal();
 
   document.querySelectorAll('[data-close]').forEach((b) => {
@@ -50,13 +48,9 @@
       if (e.target === d) {
         const r = d.getBoundingClientRect();
         if (
-          e.clientX < r.left ||
-          e.clientX > r.right ||
-          e.clientY < r.top ||
-          e.clientY > r.bottom
-        ) {
-          d.close();
-        }
+          e.clientX < r.left || e.clientX > r.right ||
+          e.clientY < r.top || e.clientY > r.bottom
+        ) d.close();
       }
     });
   });
@@ -88,18 +82,15 @@
   };
 
   $('removeArt').onclick = () => {
-    State.art = null;
-    Artwork.dirty = true;
-    Artwork.outline = null;
-    $('artName').textContent = 'No artwork selected';
-    $('artMeta').textContent = 'Upload an image to begin';
-    $('artThumb').removeAttribute('src');
+    Artwork.clear();
+    Persist.save();
     UI.toast('Artwork removed.');
   };
 
   $('opacity').oninput = (e) => {
     State.opacity = +e.target.value / 100;
     $('opacityValue').textContent = e.target.value + '%';
+    Persist.schedule();
   };
 
   /* ------------------------------------------------------------------ */
@@ -115,6 +106,7 @@
       State[key] = +e.target.value / scale;
       $(id + 'Value').textContent = e.target.value + suffix;
       Artwork.dirty = true;
+      Persist.schedule();
     };
   }
 
@@ -124,6 +116,7 @@
       $(key).setAttribute('aria-pressed', State[key]);
       $(key).classList.toggle('primary', State[key]);
       Artwork.dirty = true;
+      Persist.save();
     };
   }
 
@@ -132,10 +125,8 @@
     State.rotation = State.x = State.y = 0;
     State.flipX = State.flipY = false;
     for (const [id, val, suffix] of [
-      ['zoom', 100, '%'],
-      ['rotation', 0, '°'],
-      ['positionX', 0, '%'],
-      ['positionY', 0, '%'],
+      ['zoom', 100, '%'], ['rotation', 0, '°'],
+      ['positionX', 0, '%'], ['positionY', 0, '%'],
     ]) {
       $(id).value = val;
       $(id + 'Value').textContent = val + suffix;
@@ -145,6 +136,7 @@
       $(id).classList.remove('primary');
     }
     Artwork.dirty = true;
+    Persist.save();
     UI.toast('Artwork transform reset.');
   };
 
@@ -164,6 +156,7 @@
       }
       State[key] = v;
       UI.update();
+      Persist.save();
     };
   }
 
@@ -176,29 +169,29 @@
     $('wallWidth').value = +State.width.toFixed(3);
     $('wallHeight').value = +State.height.toFixed(3);
     UI.update();
+    Persist.save();
   };
 
   /* ------------------------------------------------------------------ */
   /* Grid / guides                                                       */
   /* ------------------------------------------------------------------ */
   for (const [id, key] of [
-    ['gridTool', 'grid'],
-    ['gridSwitch', 'grid'],
-    ['guidesTool', 'guides'],
-    ['guideSwitch', 'guides'],
-    ['measureSwitch', 'measure'],
-    ['ghostSwitch', 'ghost'],
+    ['gridTool', 'grid'], ['gridSwitch', 'grid'],
+    ['guidesTool', 'guides'], ['guideSwitch', 'guides'],
+    ['measureSwitch', 'measure'], ['ghostSwitch', 'ghost'],
   ]) {
     $(id).onclick = () => {
       State[key] = !State[key];
       if (key === 'ghost') Artwork.dirty = true;
       UI.update();
+      Persist.save();
     };
   }
 
   $('gridSize').onchange = (e) => {
     State.divisions = Math.max(2, Math.min(30, Math.round(+e.target.value) || 6));
     e.target.value = State.divisions;
+    Persist.save();
   };
 
   /* ------------------------------------------------------------------ */
@@ -212,13 +205,9 @@
   /* ------------------------------------------------------------------ */
   $('fullscreenButton').onclick = async () => {
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else if ($('viewport').requestFullscreen) {
-        await $('viewport').requestFullscreen();
-      } else {
-        UI.toast('Fullscreen is unavailable. Rotate your device for a larger canvas.');
-      }
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if ($('viewport').requestFullscreen) await $('viewport').requestFullscreen();
+      else UI.toast('Fullscreen is unavailable. Rotate your device for a larger canvas.');
     } catch {
       UI.toast('Fullscreen was not allowed by this browser.');
     }
@@ -234,10 +223,7 @@
   $('snapshotButton').onclick = () => {
     AR.render();
     AR.canvas.toBlob((blob) => {
-      if (!blob) {
-        UI.toast('Snapshot could not be created.');
-        return;
-      }
+      if (!blob) { UI.toast('Snapshot could not be created.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -262,6 +248,7 @@
       State.quality = $('quality').value;
       AR.resize();
       UI.update();
+      Persist.save();
       await Camera.apply();
       await Streaming.reconfigure();
     };
@@ -320,9 +307,7 @@
   /* Unload                                                              */
   /* ------------------------------------------------------------------ */
   window.addEventListener('beforeunload', () => {
-    try {
-      Pairing.send({ type: 'leave-session' });
-    } catch {}
+    try { Pairing.send({ type: 'leave-session' }); } catch {}
     State.camera?.getTracks().forEach((t) => t.stop());
     State.outputStream?.getTracks().forEach((t) => t.stop());
     State.pc?.close();
@@ -335,7 +320,25 @@
   Artwork.init();
   AR.init();
   Calibration.init();
+
+  // Reflect restored state back into the DOM inputs.
+  syncInputsFromState();
+
   UI.update();
+
+  // Start the wake lock manager.
+  WakeLock?.init();
+
+  // Restore artwork (async) — falls back to the demo if nothing saved.
+  Artwork.restore().then((restored) => {
+    if (restored) {
+      $('projectName').textContent = (State.artName || 'Restored artwork')
+        .replace(/\.[^.]+$/, '').toUpperCase();
+      UI.toast('Previous artwork restored.');
+    } else if (hadPersistedState) {
+      UI.toast('Session restored. Re-enable your camera to continue.');
+    }
+  });
 
   /* ------------------------------------------------------------------ */
   /* Deep-link: ?mode=viewer&code=XXXX                                   */
@@ -345,6 +348,49 @@
     UI.role('viewer');
     if (params.get('code')) {
       $('joinCode').value = params.get('code').toUpperCase();
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Helpers                                                             */
+  /* ------------------------------------------------------------------ */
+  function syncInputsFromState() {
+    // Sliders + labels
+    const sliderMap = [
+      ['zoom', State.zoom * 100, '%', Math.round],
+      ['rotation', State.rotation, '°', Math.round],
+      ['positionX', State.x * 100, '%', Math.round],
+      ['positionY', State.y * 100, '%', Math.round],
+      ['opacity', State.opacity * 100, '%', Math.round],
+    ];
+    for (const [id, val, suffix, round] of sliderMap) {
+      const el = $(id);
+      if (!el) continue;
+      const shown = round ? round(val) : val;
+      el.value = shown;
+      const out = $(id + 'Value');
+      if (out) out.textContent = shown + suffix;
+    }
+
+    // Dimensions
+    if ($('wallWidth')) $('wallWidth').value = +State.width.toFixed(3);
+    if ($('wallHeight')) $('wallHeight').value = +State.height.toFixed(3);
+    if ($('units')) $('units').value = State.units;
+
+    // Grid
+    if ($('gridSize')) $('gridSize').value = State.divisions;
+
+    // Output
+    if ($('resolution')) $('resolution').value = String(State.resolution);
+    if ($('fps')) $('fps').value = String(State.fps);
+    if ($('quality')) $('quality').value = State.quality;
+
+    // Flips
+    for (const id of ['flipX', 'flipY']) {
+      const el = $(id);
+      if (!el) continue;
+      el.setAttribute('aria-pressed', String(State[id]));
+      el.classList.toggle('primary', !!State[id]);
     }
   }
 })();
