@@ -56,6 +56,32 @@
       this.dirty = true;
     },
 
+    /** Restore artwork from localStorage, if present. Called on boot. */
+    async restore() {
+      const url = DRAW.Persist.loadArtwork();
+      if (!url) return false;
+      try {
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = url;
+        });
+        if (!img.naturalWidth) throw new Error('bad image');
+        State.art = img;
+        this.outline = null;
+        this.dirty = true;
+        $('artThumb').src = url;
+        $('artName').textContent = State.artName || 'Restored artwork';
+        $('artMeta').textContent = `${img.naturalWidth} × ${img.naturalHeight} · Restored`;
+        return true;
+      } catch (err) {
+        console.warn('[artwork] restore failed:', err && err.message);
+        DRAW.Persist.clearArtwork();
+        return false;
+      }
+    },
+
     rebuild() {
       if (!this.dirty) return;
       this.dirty = false;
@@ -128,11 +154,63 @@
         $('artName').textContent = file.name;
         $('artMeta').textContent = `${img.naturalWidth} × ${img.naturalHeight} · Local file`;
         $('projectName').textContent = file.name.replace(/\.[^.]+$/, '').toUpperCase();
-        UI.toast('Artwork loaded. Your image stays on this device.');
+
+        // Persist artwork as a data URL so a refresh restores it.
+        this.persistArtwork().then((ok) => {
+          if (ok === false) {
+            UI.toast('Artwork loaded but too large to persist across refresh.');
+          } else {
+            UI.toast('Artwork loaded. Your image stays on this device.');
+          }
+        });
       } catch {
         URL.revokeObjectURL(url);
         UI.toast('This image could not be opened. Try PNG, JPEG or WebP.');
       }
+    },
+
+    /** Convert the current source to a data URL and persist it. */
+    async persistArtwork() {
+      const src = State.art;
+      if (!src) {
+        DRAW.Persist.clearArtwork();
+        return true;
+      }
+      try {
+        // Re-encode to keep the payload small. Cap at 1400 px on the
+        // long edge so phones don't blow the localStorage quota.
+        const maxEdge = 1400;
+        const w0 = src.naturalWidth || src.width;
+        const h0 = src.naturalHeight || src.height;
+        const ratio = Math.min(1, maxEdge / Math.max(w0, h0));
+        const w = Math.round(w0 * ratio);
+        const h = Math.round(h0 * ratio);
+        const cv = document.createElement('canvas');
+        cv.width = w;
+        cv.height = h;
+        const c = cv.getContext('2d');
+        c.drawImage(src, 0, 0, w, h);
+        const url = cv.toDataURL('image/jpeg', 0.85);
+        const ok = DRAW.Persist.saveArtwork(url);
+        if (!ok) return false;
+        // Persist the name alongside the state snapshot.
+        DRAW.State.artName = State.artName;
+        DRAW.Persist.save();
+        return true;
+      } catch (err) {
+        console.warn('[artwork] persist failed:', err);
+        return false;
+      }
+    },
+
+    clear() {
+      State.art = null;
+      this.outline = null;
+      this.dirty = true;
+      DRAW.Persist.clearArtwork();
+      $('artName').textContent = 'No artwork selected';
+      $('artMeta').textContent = 'Upload an image to begin';
+      $('artThumb').removeAttribute('src');
     },
   };
 
