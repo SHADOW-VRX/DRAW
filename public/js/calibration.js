@@ -56,10 +56,18 @@
         const p = this.point(e).map((v) => Math.max(0.035, Math.min(0.965, v)));
         const next = State.corners.map((c) => c.slice());
         next[this.dragging] = p;
-        if (this.valid(next)) State.corners = next;
+        if (this.valid(next)) {
+          State.corners = next;
+          DRAW.Persist.schedule?.();
+        }
       });
       for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        DRAW.AR.canvas.addEventListener(ev, () => (this.dragging = -1));
+        DRAW.AR.canvas.addEventListener(ev, () => {
+          if (this.dragging >= 0) {
+            this.dragging = -1;
+            DRAW.Persist.save();
+          }
+        });
       }
     },
 
@@ -70,6 +78,7 @@
       State.locked = false;
       State.calibrating = true;
       UI.update();
+      DRAW.Persist.save();
       UI.toast(
         State.cameraReady
           ? 'Drag the four handles to your wall corners.'
@@ -87,6 +96,7 @@
         UI.toast('Wall locked. Keep the camera in this exact position.');
       }
       UI.update();
+      DRAW.Persist.save();
     },
   };
 
