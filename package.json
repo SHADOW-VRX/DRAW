@@ -1,0 +1,20 @@
+{
+  "name": "draw-ar-mural",
+  "version": "1.0.0",
+  "description": "DRAW — Two-device AR mural drawing system. Device A = Brain + AR Camera, Device B = Eyes + Live Drawing Monitor.",
+  "main": "server/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  },
+  "license": "MIT"
+}

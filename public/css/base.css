@@ -1,0 +1,25 @@
+:root{
+  --bg:#101514;--panel:#181e1c;--panel2:#1e2522;--line:#303833;--muted:#909b94;
+  --text:#f2f3eb;--accent:#d7f69c;--accent-dark:#263820;--orange:#efa47d;--radius:16px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:"DM Sans",system-ui,-apple-system,sans-serif;font-size:14px;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+button,input,select{font:inherit}
+button{cursor:pointer;color:inherit}
+button:disabled{opacity:.4;cursor:not-allowed}
+button,a,input,select{outline-offset:4px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.65;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+img{max-width:100%;display:block}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:700;text-transform:uppercase}

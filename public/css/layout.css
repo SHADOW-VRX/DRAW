@@ -1,0 +1,11 @@
+header{height:83px;padding:0 38px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  position:sticky;top:0;background:var(--bg);z-index:10}
+main{max-width:1600px;margin:auto;padding:29px 38px 22px}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 326px;gap:23px;align-items:start}
+.left-column{min-width:0}
+.sidebar{display:flex;flex-direction:column;gap:13px}
+footer{border-top:1px solid #273025;padding:16px 38px;display:flex;
+  justify-content:space-between;color:#6e7b6b;font-size:10px;max-width:1600px;margin:auto}
+.viewer-screen{min-height:calc(100dvh - 83px);display:grid;place-items:center;
+  position:relative;background:#090e0b;padding:24px}

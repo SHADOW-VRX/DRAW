@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101514">
+<meta name="description" content="DRAW — Turn any wall into a canvas. Pair two devices over WebRTC and trace your artwork in real time.">
+<meta name="application-name" content="DRAW">
+<meta property="og:title" content="DRAW — Your wall. Your vision.">
+<meta property="og:description" content="Two-device AR mural tracing. Device A is the camera + controller. Device B is the live drawing monitor.">
+<meta property="og:type" content="website">
+<title>DRAW — Your wall. Your vision.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/layout.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+<defs>
+<symbol id="i-frame" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><path d="m7 16 4-8 3 6 3-4"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 4 4 3-3 5 5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-ruler" viewBox="0 0 24 24"><path d="m3 16 13-13 5 5L8 21zM12 7l2 2m-6 2 2 2m-6 2 2 2"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18m6-18v18M3 9h18M3 15h18"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0m-4 9v2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></symbol>
+<symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h6v6H3zm12 0h6v6h-6zM3 15h6v6H3zM15 15h3v3h3v3h-6zm6-3v3M12 3v3m0 6h3m-3 3v6M3 12h3"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
+<symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/></symbol>
+<symbol id="i-flip" viewBox="0 0 24 24"><path d="M12 3v18M3 18l6-12v12zm18 0L15 6v12z"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-11 4a6 6 0 0 1 8 0m-4 4h.01"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/></symbol>
+</defs>
+</svg>
+
+<header id="appHeader">
+<a class="brand" href="./" aria-label="DRAW home">
+<span class="brandmark"><svg><use href="#i-frame"/></svg></span>
+<div>
+<div class="brand-name">draw</div>
+<div class="brand-sub">YOUR WALL. YOUR VISION.</div>
+</div>
+</a>
+<div class="header-right">
+<nav class="mode-tabs" aria-label="Device mode">
+<button id="controllerTab" class="active" aria-pressed="true" aria-label="Controller mode" title="Controller">
+<svg><use href="#i-sliders"/></svg><span class="mode-label">Controller</span>
+</button>
+<button id="viewerTab" aria-pressed="false" aria-label="Live viewer mode" title="Live viewer">
+<svg><use href="#i-eye"/></svg><span class="mode-label">Live viewer</span>
+</button>
+</nav>
+<span class="header-note"><svg><use href="#i-lock"/></svg>Art stays on your devices</span>
+<button id="helpButton" class="help-btn" aria-label="Help"><svg><use href="#i-info"/></svg></button>
+</div>
+</header>
+
+<main id="controllerApp">
+<section class="intro">
+<div>
+<div class="breadcrumb"><span>WORKSPACE</span><i>/</i><span id="projectName">UNTITLED MURAL</span></div>
+<h1>Your wall. Your vision.</h1>
+<p>Turn a little inspiration into something larger than life.</p>
+</div>
+<span class="workspace-tag"><span class="dot green"></span> Device A · Controller</span>
+</section>
+
+<div class="workspace">
+<section class="left-column" aria-label="Camera and live streaming">
+<div class="preview-panel">
+<div class="preview-header">
+<div class="preview-title"><svg><use href="#i-camera"/></svg> AR canvas</div>
+<div class="preview-meta">
+<span class="resolution-label" id="canvasResolution">1920 × 1080</span>
+<span class="live-pill" id="previewBadge"><span class="dot"></span>PREVIEW</span>
+<button id="enableCamera" class="camera-enable">Enable camera</button>
+</div>
+</div>
+<div class="viewport" id="viewport">
+<canvas id="outputCanvas" width="1920" height="1080" aria-label="AR mural canvas"></canvas>
+<div class="view-top">
+<span class="glass-label" id="calibrationBadge"><svg><use href="#i-target"/></svg> Ready to calibrate</span>
+<span class="glass-label" id="dimensionBadge">3.0 × 2.0 m</span>
+</div>
+<div class="preview-callout" id="previewCallout"><svg><use href="#i-sun"/></svg><span>Demo wall · Enable your camera to get started</span></div>
+<div class="view-tools" aria-label="Canvas tools">
+<button id="resetTransform" title="Reset artwork transform" aria-label="Reset artwork transform"><svg><use href="#i-reset"/></svg></button>
+<button id="gridTool" class="active" title="Toggle grid" aria-label="Toggle grid" aria-pressed="true"><svg><use href="#i-grid"/></svg></button>
+<button id="guidesTool" title="Toggle center guides" aria-label="Toggle center guides" aria-pressed="false"><svg><use href="#i-target"/></svg></button>
+<span class="tool-divider"></span>
+<button id="snapshotButton" title="Download canvas image" aria-label="Download canvas image"><svg><use href="#i-camera"/></svg></button>
+<button id="fullscreenButton" title="Full screen" aria-label="Full screen"><svg><use href="#i-expand"/></svg></button>
+</div>
+</div>
+<div class="preview-footer">
+<span><span class="dot" id="cameraDot"></span><b id="cameraFooter">Camera not enabled</b></span>
+<span><svg><use href="#i-target"/></svg><span id="canvasHint">4-point perspective calibration</span></span>
+<span id="outputSummary">1080p · 30 FPS · High</span>
+</div>
+</div>
+
+<div class="stream-card">
+<div class="stream-top">
+<div class="stream-identity">
+<span class="stream-icon"><svg><use href="#i-eye"/></svg></span>
+<div><h3>A second screen. A clearer perspective.</h3><p>Pair your viewer and keep your hands on the wall.</p></div>
+</div>
+<button id="createSession" class="session-button secondary"><svg><use href="#i-qr"/></svg><span id="sessionButtonText">Create session</span></button>
+</div>
+<div class="stream-bottom">
+<div class="checks">
+<span id="cameraCheck"><svg><use href="#i-camera"/></svg>Camera not ready</span>
+<span id="peerCheck"><svg><use href="#i-eye"/></svg>Viewer not paired</span>
+<span><svg><use href="#i-wifi"/></svg><span id="qualityCheck">1080p · 30 FPS · High</span></span>
+</div>
+<button id="startLive" class="primary start-button" disabled><svg><use href="#i-play"/></svg><span>START LIVE VIEW</span></button>
+</div>
+</div>
+<div class="tip"><svg><use href="#i-info"/></svg><span><strong>A little tip:</strong> Keep Device A steady after calibration. A tripod makes a great studio assistant.</span></div>
+</section>
+
+<aside class="sidebar" aria-label="Mural controls">
+<section class="control-card artwork-card">
+<div class="card-heading"><h2><svg><use href="#i-image"/></svg>Your artwork</h2><span class="eyebrow">01 / CREATE</span></div>
+<div class="card-body">
+<div class="art-row">
+<img id="artThumb" class="art-thumb" alt="Abstract terracotta and sage artwork">
+<div class="art-details"><strong id="artName">Desert rhythm</strong><span id="artMeta">Sample artwork · 1200 × 800</span></div>
+<button id="removeArt" title="Remove artwork" aria-label="Remove artwork"><svg><use href="#i-close"/></svg></button>
+</div>
+<button id="uploadButton" class="upload-button"><svg><use href="#i-upload"/></svg>Upload your artwork</button>
+<input type="file" id="imageUpload" accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml" hidden>
+<label class="field-label" for="opacity">Image opacity<output id="opacityValue">75%</output></label>
+<input id="opacity" class="range" type="range" min="0" max="100" value="75" aria-label="Image opacity">
+</div>
+</section>
+
+<section class="control-card dimensions-card">
+<div class="card-heading"><h2><svg><use href="#i-ruler"/></svg>Wall dimensions</h2><span class="eyebrow">02 / SIZE</span></div>
+<div class="card-body">
+<div class="dimension-fields">
+<div class="input-group"><label for="wallWidth">Width</label><input id="wallWidth" type="number" min=".01" max="10000" step=".1" value="3.0"></div>
+<div class="input-group"><label for="wallHeight">Height</label><input id="wallHeight" type="number" min=".01" max="10000" step=".1" value="2.0"></div>
+<div class="input-group"><label for="units">Units</label><select id="units"><option value="m">m</option><option value="cm">cm</option><option value="ft">ft</option><option value="in">in</option></select></div>
+</div>
+<p class="dimension-note"><svg><use href="#i-check"/></svg>Measurements scale with your calibrated wall</p>
+</div>
+</section>
+
+<section class="control-card">
+<button class="accordion-heading" aria-expanded="false" aria-controls="transformContent"><span><svg><use href="#i-sliders"/></svg>Transform artwork</span><svg><use href="#i-chevron"/></svg></button>
+<div id="transformContent" class="accordion-content hidden">
+<label class="field-label" for="zoom">Scale<output id="zoomValue">100%</output></label>
+<input class="range" id="zoom" type="range" min="10" max="250" value="100">
+<label class="field-label" for="rotation">Rotation<output id="rotationValue">0°</output></label>
+<input class="range" id="rotation" type="range" min="-180" max="180" value="0">
+<label class="field-label" for="positionX">Horizontal<output id="positionXValue">0%</output></label>
+<input class="range" id="positionX" type="range" min="-100" max="100" value="0">
+<label class="field-label" for="positionY">Vertical<output id="positionYValue">0%</output></label>
+<input class="range" id="positionY" type="range" min="-100" max="100" value="0">
+<div class="compact-row">
+<button id="flipX" aria-pressed="false"><svg><use href="#i-flip"/></svg>Flip H</button>
+<button id="flipY" aria-pressed="false"><svg style="transform:rotate(90deg)"><use href="#i-flip"/></svg>Flip V</button>
+</div>
+</div>
+</section>
+
+<section class="control-card">
+<button class="accordion-heading" aria-expanded="false" aria-controls="gridContent"><span><svg><use href="#i-grid"/></svg>Grid &amp; guides</span><svg><use href="#i-chevron"/></svg></button>
+<div id="gridContent" class="accordion-content hidden">
+<div class="switch-row"><span>Show grid</span><button id="gridSwitch" class="switch" role="switch" aria-checked="true" aria-label="Show grid"></button></div>
+<div class="input-group"><label for="gridSize">Divisions across wall</label><input id="gridSize" type="number" min="2" max="30" value="6"></div>
+<div class="switch-row"><span>Measurements</span><button id="measureSwitch" class="switch" role="switch" aria-checked="true" aria-label="Show measurements"></button></div>
+<div class="switch-row"><span>Crosshair guides</span><button id="guideSwitch" class="switch" role="switch" aria-checked="false" aria-label="Show crosshair guides"></button></div>
+<div class="switch-row"><span>Outline / ghost view</span><button id="ghostSwitch" class="switch" role="switch" aria-checked="false" aria-label="Outline artwork"></button></div>
+</div>
+</section>
+
+<section class="control-card">
+<div class="card-heading"><h2><svg><use href="#i-target"/></svg>Wall calibration</h2><span id="calibrationStep" class="step-tag">4 POINTS</span></div>
+<div class="card-body">
+<p class="calibration-note" id="calibrationNote">Align the four corners with your wall, then lock your canvas in place.</p>
+<div class="calibration-buttons">
+<button id="calibrateButton" class="secondary"><svg><use href="#i-target"/></svg>Calibrate</button>
+<button id="lockButton" class="secondary" disabled><svg><use href="#i-lock"/></svg>Lock wall</button>
+</div>
+</div>
+</section>
+
+<section class="control-card output-card">
+<div class="card-heading"><h2><svg><use href="#i-wifi"/></svg>Live output</h2><span class="eyebrow">DEVICE B</span></div>
+<div class="card-body">
+<div class="output-fields">
+<div class="input-group"><label for="resolution">Resolution</label>
+<select id="resolution">
+<option value="480">480p</option>
+<option value="720">720p</option>
+<option value="1080" selected>1080p</option>
+<option value="1440">1440p</option>
+<option value="2160">2160p / 4K</option>
+</select></div>
+<div class="input-group"><label for="fps">FPS</label>
+<select id="fps"><option>24</option><option selected>30</option><option>60</option></select></div>
+<div class="input-group"><label for="quality">Quality</label>
+<select id="quality"><option>Low</option><option>Medium</option><option selected>High</option><option>Ultra</option></select></div>
+</div>
+<p class="output-note"><svg><use href="#i-info"/></svg>Actual camera quality depends on your device.</p>
+</div>
+</section>
+
+<div class="sidebar-bottom"><svg><use href="#i-lock"/></svg>Direct device-to-device video via WebRTC</div>
+</aside>
+</div>
+</main>
+
+<section id="viewerApp" class="viewer-screen hidden" aria-label="Live viewer">
+<div class="viewer-card">
+<div class="viewer-mark"><svg><use href="#i-eye"/></svg></div>
+<div class="eyebrow muted">DEVICE B / LIVE VIEWER</div>
+<h1>Just you and the wall.</h1>
+<p>Enter the session code from your controller.<br>Your live canvas will appear here — no distractions.</p>
+<label for="joinCode">Session code</label>
+<input id="joinCode" class="text-input" maxlength="25" placeholder="DRAW-XXXXXXXX" autocomplete="off" spellcheck="false" autocapitalize="characters">
+<button id="joinSession" class="primary"><svg><use href="#i-wifi"/></svg>Connect to controller</button>
+<button id="scanCode" class="secondary"><svg><use href="#i-qr"/></svg>Scan session QR</button>
+<video id="scanVideo" class="scan-video hidden" playsinline muted></video>
+<p id="viewerConnectStatus" role="status">Enter the code shown on Device A.</p>
+</div>
+</section>
+
+<div id="viewerLive" class="viewer-live hidden">
+<video id="remoteVideo" class="viewer-video" autoplay playsinline></video>
+<span class="viewer-status"><span class="dot green"></span><span id="viewerLiveStatus">Connecting to controller</span></span>
+<button id="exitViewer" class="viewer-exit" aria-label="Leave live viewer"><svg><use href="#i-close"/></svg></button>
+<div id="viewerWaiting" class="waiting-message">
+<svg><use href="#i-wifi"/></svg>
+<span id="viewerWaitingText">Waiting for the controller to start…</span>
+</div>
+</div>
+
+<footer id="appFooter">
+<span class="footer-brand">MADE FOR BIG IDEAS.</span>
+<div class="footer-right">
+<span><svg><use href="#i-lock"/></svg>Local artwork. Direct video.</span>
+<span>DRAW / 01</span>
+</div>
+</footer>
+
+<dialog id="pairDialog">
+<div class="dialog-header">
+<h2>Your second screen awaits.</h2>
+<button class="icon-btn secondary" data-close="pairDialog" aria-label="Close pairing"><svg><use href="#i-close"/></svg></button>
+</div>
+<div class="dialog-body">
+<p>Create a session, then enter its code on Device B. Video travels directly between devices via WebRTC — the server only helps pair them.</p>
+<div id="sessionSetup">
+<button id="connectSignaling" class="primary"><svg><use href="#i-plus"/></svg>Create session</button>
+</div>
+<div id="sessionResult" class="hidden">
+<div class="qr-wrap">
+<canvas id="qrCanvas" width="232" height="232" aria-label="Session code QR"></canvas>
+<div id="sessionCode" class="session-code"></div>
+</div>
+<p style="text-align:center">On Device B, choose <strong>Live viewer</strong> and enter this code.</p>
+<button id="copyCode" class="secondary" style="width:100%">Copy session code</button>
+</div>
+<div id="pairStatus" class="dialog-status" role="status"></div>
+<details class="protocol">
+<summary>How pairing works</summary>
+<pre>Codes are generated by the server using a cryptographically
+secure random source, so they cannot be guessed.
+
+Sessions expire automatically after a short idle period. No
+artwork, video, or personal data is stored on the server —
+only the pairing handshake and WebRTC signaling messages are
+relayed between the two devices.
+
+All media flows peer-to-peer over WebRTC. A STUN server helps
+devices discover each other; on strict networks a TURN relay
+may be required.</pre>
+</details>
+</div>
+</dialog>
+
+<dialog id="helpDialog">
+<div class="dialog-header">
+<h2>From screen to wall.</h2>
+<button class="icon-btn secondary" data-close="helpDialog" aria-label="Close help"><svg><use href="#i-close"/></svg></button>
+</div>
+<div class="dialog-body">
+<p>DRAW composites your camera, artwork and guides into a single real-time video stream that Device B displays.</p>
+<ol class="help-list">
+<li>Enable your rear camera on HTTPS or localhost.</li>
+<li>Upload artwork and enter measured wall dimensions.</li>
+<li>Calibrate: drag all four handles to your wall corners.</li>
+<li>Lock the corners and keep the camera stationary.</li>
+<li>Create a session and note the code.</li>
+<li>Pair Device B, then start the live view.</li>
+</ol>
+<p>Calibration is a manual perspective transform, not spatial AR tracking. Locking fixes the artwork coordinates; it does not freeze the camera.</p>
+<button class="primary" data-close="helpDialog">Let's make something</button>
+</div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<video id="cameraVideo" playsinline muted autoplay hidden></video>
+
+<script src="/js/state.js" defer></script>
+<script src="/js/ui.js" defer></script>
+<script src="/js/camera.js" defer></script>
+<script src="/js/image.js" defer></script>
+<script src="/js/ar.js" defer></script>
+<script src="/js/calibration.js" defer></script>
+<script src="/js/qr.js" defer></script>
+<script src="/js/pairing.js" defer></script>
+<script src="/js/streaming.js" defer></script>
+<script src="/js/app.js" defer></script>
+</body>
+</html>
